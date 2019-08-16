@@ -48,11 +48,10 @@ const findCompanies = async (user)=> {
 
 class Company extends Component {
     render(){
-        console.log(this.props)
         return (
             <form>
                 <p>{this.props.company.name}</p>
-                <select name='ratings' value={this.props.rating}onChange={ev => onUpdate(P)}>
+                <select name='ratings' value={this.props.rating} onChange={ev => this.props.onUpdate(ev.target.value, this.props.company, this.props.rating)}>
                     {(['',1,2,3,4,5]).map(rating => <option>{rating}</option>)}
                 </select>
             </form>
@@ -68,7 +67,38 @@ class App extends Component {
             followCompanies:[],
             allCompanies:[]
         }
+        this.onUpdate = this.onUpdate.bind(this);
     }
+    onUpdate(newRating, company, rating){
+        const {user} = this.state
+        console.log(newRating, company, rating,);
+        if(rating && newRating){
+
+           //put
+        }
+        else if(rating && !newRating){
+            //delete
+        }
+        else if(!rating && newRating){
+            axios.post(`${API}/users/${user.id}/followingCompanies`, {rating:newRating, companyId:company.id})
+
+
+        }
+        else{
+            //do nothing
+        }
+
+
+
+
+    }
+
+    async componentDidUpdate(){
+        const followCompanies = (await findCompanies(this.user)).data;
+        const allCompanies = (await axios.get(`${API}/companies`)).data;
+        this.setState({ followCompanies: followCompanies, allCompanies: allCompanies})
+    }
+
     async componentDidMount(){
         const user = await fetchUser();
         const followCompanies = (await findCompanies(user)).data;
@@ -79,20 +109,19 @@ class App extends Component {
 
 
 
-    getCompanies(followCompanies, allCompanies) {
+    getCompanies(followCompanies, allCompanies, onUpdate) {
         const getFollowedIds = followCompanies.map(follow => follow.companyId);
-        //const followed = (company) => (getFollowedIds.includes(company.id) ? 'followed' : '');
         const followed = (company) => getFollowedIds.includes(company.id)
         const followClass = (company) => followed(company)
         const rating = (company) => followCompanies.find(follow => follow.companyId === company.id).rating;
         const mapCompanies = allCompanies.map(company => {
             if(followed(company)) {
                 return (
-                    <li key={company.id} className={'followed'}><Company company={company} rating={rating(company)}/></li>
+                    <li key={company.id} className={'followed'}><Company onUpdate={onUpdate} company={company} rating={rating(company)}/></li>
                 )
-            } 
+            }
             return (
-                <li key={company.id}><Company company={company} rating=''/></li>
+                <li key={company.id}><Company onUpdate={onUpdate} company={company} rating=''/></li>
             )
         });
         return (
@@ -101,10 +130,11 @@ class App extends Component {
     }
     render(){
         const {user, followCompanies, allCompanies} = this.state;
+        const {onUpdate} = this;
         return (
             <div>
                 <h4>You ({user.fullName}) are following {followCompanies.length} companies;</h4>
-                {this.getCompanies(followCompanies, allCompanies)}
+                {this.getCompanies(followCompanies, allCompanies, onUpdate)}
             </div>
         );
 
