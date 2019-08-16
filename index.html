@@ -26,7 +26,7 @@ const root = document.querySelector('#root');
 
 const fetchUser = async ()=> {
       const storage = window.localStorage;
-      const userId = storage.getItem('userId'); 
+      const userId = storage.getItem('userId');
       if(userId){
         try {
           return (await axios.get(`${API}/users/detail/${userId}`)).data;
@@ -46,6 +46,20 @@ const findCompanies = async (user)=> {
     return companies;
 }
 
+class Company extends Component {
+    render(){
+        console.log(this.props)
+        return(
+            <form>
+                <p>{this.props.company.name}</p>
+                <select name='ratings'>
+                    {([1,2,3,4,5]).map(rating => <option>{rating}</option>)}
+                </select>
+            </form>
+            )
+    }
+}
+
 class App extends Component {
     constructor (){
         super();
@@ -61,10 +75,14 @@ class App extends Component {
         const allCompanies = (await axios.get(`${API}/companies`)).data;
         this.setState({user: user, followCompanies: followCompanies, allCompanies: allCompanies});
     }
+
+
+
+
     getCompanies(followCompanies, allCompanies) {
         const getFollowedIds = followCompanies.map(follow => follow.companyId);
         const mapCompanies = allCompanies.map(company => (
-            <li key={company.id} className={getFollowedIds.includes(company.id) ? 'followed' : ''}>{company.name}</li>
+            <li key={company.id} className={getFollowedIds.includes(company.id) ? 'followed' : ''}><Company company={company}/></li>
         ));
         return (
             <ul>{mapCompanies}</ul>
@@ -83,6 +101,6 @@ class App extends Component {
 }
 render(<App/>, root);
 </script>
-    
+
 </body>
 </html>
