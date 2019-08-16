@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.1/react-router-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.js"></script>
+    <link rel="stylesheet" href="style.css" />
     <title>Company Following</title>
 </head>
 <body>
@@ -50,19 +51,33 @@ class App extends Component {
         super();
         this.state = {
             user:{},
-            followings:{},
-            ratings:{}
+            followCompanies:[],
+            allCompanies:[]
         }
     }
     async componentDidMount(){
         const user = await fetchUser();
-        console.log(user);
-        const companies = await findCompanies(user);
-        console.log(companies);
-        this.setState({user: user})
+        const followCompanies = (await findCompanies(user)).data;
+        const allCompanies = (await axios.get(`${API}/companies`)).data;
+        this.setState({user: user, followCompanies: followCompanies, allCompanies: allCompanies});
+    }
+    getCompanies(followCompanies, allCompanies) {
+        const getFollowedIds = followCompanies.map(follow => follow.companyId);
+        const mapCompanies = allCompanies.map(company => (
+            <li key={company.id} className={getFollowedIds.includes(company.id) ? 'followed' : ''}>{company.name}</li>
+        ));
+        return (
+            <ul>{mapCompanies}</ul>
+        );
     }
     render(){
-        return <hr/>
+        const {user, followCompanies, allCompanies} = this.state;
+        return (
+            <div>
+                <h4>You ({user.fullName}) are following {followCompanies.length} companies;</h4>
+                {this.getCompanies(followCompanies, allCompanies)}
+            </div>
+        );
 
     }
 }
